@@ -24,7 +24,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
             // Empleado al que pertenece la nómina
 
-            $table->integer('mes'); // Mes de la nómina (1 - 12)
+            $table->integer('mes'); // Mes de la nómina
             $table->integer('anio'); // Año de la nómina
 
             $table->integer('horas_total');

@@ -28,13 +28,13 @@ return new class extends Migration
             $table->string('nombre');
             // Nombre completo del empleado
 
-            $table->boolean('is_interno');
+            $table->boolean('es_interno');
             // Indica si el empleado es interno (true) o subcontratado (false)
 
-            $table->foreignId('role_id')
+            $table->foreignId('rol_id')
                 ->constrained('roles')
                 ->restrictOnDelete();
-            // Rol base del empleado
+            // Rol base del empleado con la relación a la tabla de roles
 
             $table->date('fecha_ingreso');
             // Fecha en la que el empleado ingresó a la empresa
@@ -44,9 +44,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Revierte la migración.
-     */
     public function down(): void
     {
         Schema::dropIfExists('empleados');

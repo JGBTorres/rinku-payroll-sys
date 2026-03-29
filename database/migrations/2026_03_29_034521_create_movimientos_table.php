@@ -6,33 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Tabla: movimientos
- *
- * Registra las actividades diarias de los empleados,
- * incluyendo horas trabajadas, entregas realizadas y rol desempeñado.
+ * * Registra las actividades diarias para el cálculo de nómina:
+ * - Entregas realizadas (Bono $5)
+ * - Horas trabajadas (Sueldo base + Bonos por rol)
  */
 return new class extends Migration
 {
-    /**
-     * Ejecuta la migración.
-     */
     public function up(): void
     {
-       Schema::create('empleados', function (Blueprint $table) {
-    $table->id();
-    $table->uuid('uuid')->unique()->default(DB::raw('gen_random_uuid()'));
-    $table->string('numero_empleado')->unique();
-    $table->string('nombre');
-    $table->boolean('is_interno');
-    $table->foreignId('role_id')->constrained('roles')->restrictOnDelete();
-    $table->date('fecha_ingreso');
-    $table->boolean('activo')->default(true);
-    $table->timestamps();
-});
+        Schema::create('movimientos', function (Blueprint $table) {
+            $table->id();
+            // Relación con el empleado
+            $table->foreignId('empleado_id')->constrained('empleados')->onDelete('cascade');
+            $table->date('fecha');
+            $table->decimal('horas_trabajadas', 5, 2);
+            $table->integer('entregas');
+            // El rol que tenía el empleado al momento de este movimiento
+            $table->foreignId('rol_aplicado_id')->constrained('roles');
+        });
     }
 
-    /**
-     * Revierte la migración.
-     */
     public function down(): void
     {
         Schema::dropIfExists('movimientos');
