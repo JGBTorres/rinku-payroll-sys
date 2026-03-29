@@ -17,28 +17,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('movimientos', function (Blueprint $table) {
-            $table->id(); // Identificador del movimiento
-
-            $table->foreignId('empleado_id')
-                ->constrained('empleados')
-                ->cascadeOnDelete();
-            // Empleado al que pertenece el movimiento
-
-            $table->date('fecha');
-            // Fecha en que se realizó la actividad
-
-            $table->decimal('horas_trabajadas', 5, 2);
-            // Número de horas trabajadas en el día
-
-            $table->integer('entregas');
-            // Cantidad de entregas realizadas
-
-            $table->foreignId('rol_aplicado_id')
-                ->constrained('roles')
-                ->restrictOnDelete();
-            // Rol desempeñado en ese día (puede diferir del rol base)
-        });
+       Schema::create('empleados', function (Blueprint $table) {
+    $table->id();
+    $table->uuid('uuid')->unique()->default(DB::raw('gen_random_uuid()'));
+    $table->string('numero_empleado')->unique();
+    $table->string('nombre');
+    $table->boolean('is_interno');
+    $table->foreignId('role_id')->constrained('roles')->restrictOnDelete();
+    $table->date('fecha_ingreso');
+    $table->boolean('activo')->default(true);
+    $table->timestamps();
+});
     }
 
     /**
