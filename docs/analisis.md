@@ -1,46 +1,61 @@
-**Alanisis de Requeruimientos del software**
----------------------------------------
-*Entradas (Data Input)
----------------------------------------
+Análisis de Requerimientos del Software
+Entradas (Data Input)
+Catálogo de empleados
 
---Catalago de empleados 
-Numero: Identificador único del empleado 
-Nombre: Nombre completo.
-Rol: Chofer , Cargador o Auxiliar. 
-Tipo: Interno o Externo.
+Se tiene un registro de empleados con la siguiente información:
 
+Número de empleado: identificador único
+Nombre: nombre completo
+Rol: puede ser Chofer, Cargador o Auxiliar
+Tipo de empleado: puede ser Interno o Subcontratado
+Movimientos
 
+Los movimientos representan la actividad diaria de cada empleado:
 
---Movimientos : 
-Número de empleado: Para asociar la actividad.
-Nombre / Rol / Tipo: Datos informativos del empleado seleccionado.
-Fecha: Día del registro.
-Cantidad de entregas: Número de entregas realizadas en la jornada.
-Cubrió turno (Checkbox): Indicador de si el trabajador realizó una suplencia.
-Tipo (de turno cubierto): Selección entre Interno o Externo para la suplencia.
+Número de empleado: para identificar al trabajador
+Fecha: día en que se realizó la actividad
+Horas trabajadas: cantidad de horas laboradas en esa jornada
+Cantidad de entregas: total de entregas realizadas
+Rol aplicado: rol que desempeñó ese día (puede ser distinto al habitual en caso de suplencia)
+Lógica de Negocio (Procesos)
+Sueldo Base
 
+El sueldo base se calcula en función de las horas trabajadas:
 
+Sueldo Base = Horas trabajadas × 30.00
 
----------------------------------------
-*Logica de negocio (Procesos)
----------------------------------------
+Pago por Entregas
 
-Sueldo Base: Se calcula sobre una jornada estándar de 8 horas diarias con un pago de $30.00 por hora.
-Fórmula diaria: $30.00 x 8 = $240.00.
-Pago por Entregas: $5.00 adicionales por cada entrega realizada.
-Bonos por Rol (por hora extra al sueldo base ):
-Chofer: $10.00/hora.
-Cargador: $5.00/hora.
-Auxiliar: $0.00/hora.
-Regla de Suplencias: Si un Auxiliar cubre el turno de un Chofer o Cargador, se le debe asignar el bono por hora del puesto que está cubriendo durante esa jornada.
+Se agrega un pago adicional por cada entrega realizada:
 
--Prestaciones y Retenciones :
+Pago por entregas = Número de entregas × 5.00
 
-Vales de Despensa: 4% calculado sobre el Sueldo Mensual Bruto.
-Restricción: Únicamente aplica para empleados con tipo de contrato Interno. Los Externos NO perciben este beneficio.
+Bonos por Rol
 
-Impuesto sobre la Renta (ISR):
+Dependiendo del rol desempeñado, se agrega un bono por hora:
 
-Tasa Base: 9% de retención sobre el sueldo mensual.
+Chofer: 10.00 por hora
+Cargador: 5.00 por hora
+Auxiliar: 0.00 por hora
+Regla de Suplencias
 
-Tasa de Excedente: Si el sueldo mensual bruto supera los $16,000.00, se aplica una retención adicional del 3% (totalizando un 12% de ISR).
+Si un empleado cubre un rol diferente al suyo, el cálculo se hace con el rol que realmente desempeñó ese día, no con su rol original.
+
+Impuesto sobre la Renta (ISR)
+Se aplica una tasa base del 9% sobre el sueldo bruto mensual
+Si el sueldo bruto supera los 16,000.00, se aplica una tasa del 12%
+Vales de Despensa
+Se calcula el 4% del sueldo bruto mensual
+Solo aplica para empleados internos
+No aplica para empleados subcontratados
+Salidas (Output)
+
+El sistema debe generar la siguiente información:
+
+Sueldo base total
+Total por entregas
+Total de bonos
+Sueldo bruto
+ISR retenido
+Vales de despensa
+Sueldo neto final
