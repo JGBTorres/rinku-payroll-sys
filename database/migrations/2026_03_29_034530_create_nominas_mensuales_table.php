@@ -27,7 +27,7 @@ return new class extends Migration
             $table->integer('mes'); // Mes de la nómina
             $table->integer('anio'); // Año de la nómina
 
-            $table->integer('horas_total');
+            $table->decimal('horas_total', 5, 2);
             // Total de horas trabajadas en el mes
 
             $table->decimal('sueldo_base_total', 12, 2);
