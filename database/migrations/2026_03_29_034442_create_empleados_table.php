@@ -19,7 +19,7 @@ return new class extends Migration
         Schema::create('empleados', function (Blueprint $table) {
             $table->id(); // Identificador interno
 
-            $table->uuid('uuid')->unique();
+            $table->uuid('uuid')->unique()->index();
             // Identificador único global (UUID)
 
             $table->string('numero_empleado')->unique();
@@ -41,6 +41,7 @@ return new class extends Migration
 
             $table->boolean('activo')->default(true);
             // Indica si el empleado sigue activo
+            $table->timestamps();
         });
     }
 

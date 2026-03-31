@@ -17,12 +17,19 @@ return new class extends Migration
         Schema::create('movimientos', function (Blueprint $table) {
             $table->id();
             // Relación con el empleado
-            $table->foreignId('empleado_id')->constrained('empleados')->onDelete('cascade');
+            $table->foreignId('empleado_id')->constrained('empleados');
+
             $table->date('fecha');
             $table->decimal('horas_trabajadas', 5, 2);
             $table->integer('entregas');
+
             // El rol que tenía el empleado al momento de este movimiento
             $table->foreignId('rol_aplicado_id')->constrained('roles');
+
+
+            $table->index(['empleado_id', 'fecha']);
+
+            $table->timestamps();
         });
     }
 
