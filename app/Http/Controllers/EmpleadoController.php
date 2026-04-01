@@ -6,27 +6,50 @@ use App\Models\Empleado;
 use App\Http\Requests\CrearEmpleadoRequest;
 use App\Http\Requests\ActualizarEmpleadoRequest;
 use App\Http\Responses\ApiResponse;
+use Illuminate\Http\Request;
 
-/**
- * Controlador de empleados.
- */
 class EmpleadoController extends Controller
+
 {
     /**
-     * Buscar empleado por número de empleado.
+     * Listar todos los empleados (Para la tabla).
      */
-    public function buscarPorNumero(string $numero)
+    public function index()
     {
-        $empleado = Empleado::with('rol')
-            ->where('numero_empleado', $numero)
-            ->where('activo', true)
-            ->first();
+        try {
+            // Traemos todos con su relación de rol para mostrar el nombre del puesto
+            $empleados = Empleado::with('rol')->orderBy('created_at', 'desc')->get();
 
+            return ApiResponse::exito($empleados, 'Lista de empleados recuperada.');
+        } catch (\Exception $e) {
+            return ApiResponse::error('Error al obtener empleados: ' . $e->getMessage(), 500);
+        }
+    }
+    /**
+     * Buscar empleado o verificar disponibilidad.
+     */
+    public function buscarPorNumero(Request $request, string $numero)
+    {
+        // Usamos first() para obtener la instancia o null
+        $empleado = Empleado::with('rol')->where('numero_empleado', $numero)->first();
+
+        //Si NO existe (Error 404)
         if (!$empleado) {
-            return ApiResponse::error('Empleado no encontrado', 404);
+            return ApiResponse::error('El número de empleado no existe.', 404);
         }
 
-        return ApiResponse::exito($empleado, 'Empleado encontrado');
+        //Si estamos en la pestaña "NUEVO" (check_only) y YA existe
+        if ($request->query('check_only')) {
+            return ApiResponse::error('Este número ya está registrado.', 409);
+        }
+
+        //Si existe pero está INACTIVO (Error 422 - Unificamos a 422 para validación de negocio)
+        if (!$empleado->activo) {
+            return ApiResponse::error('Este empleado se encuentra inactivo.', 422);
+        }
+
+        // 4. ÉXITO: Búsqueda completa
+        return ApiResponse::exito($empleado, 'Empleado encontrado.');
     }
 
     /**
@@ -34,41 +57,52 @@ class EmpleadoController extends Controller
      */
     public function crear(CrearEmpleadoRequest $request)
     {
+        // create() ya usa los datos validados del Request
         $empleado = Empleado::create($request->validated());
         $empleado->load('rol');
 
-        return ApiResponse::exito($empleado, 'Empleado creado', 201);
+        return ApiResponse::exito($empleado, 'Empleado registrado con éxito.', 201);
     }
 
     /**
-     * Actualizar empleado
+     * Actualizar empleado.
      */
     public function actualizar(ActualizarEmpleadoRequest $request, string $uuid)
     {
         $empleado = Empleado::where('uuid', $uuid)->first();
 
-       if (!$empleado) {
-            return ApiResponse::error('Empleado no encontrado', 404);
+        if (!$empleado) {
+            return ApiResponse::error('Empleado no encontrado.', 404);
+        }
+
+        if (!$empleado->activo) {
+            return ApiResponse::error('No se pueden editar datos de un empleado inactivo.', 422);
         }
 
         $empleado->update($request->validated());
 
-        return ApiResponse::exito($empleado->load('rol'), 'Empleado actualizado');
+        return ApiResponse::exito($empleado->load('rol'), 'Datos actualizados correctamente.');
     }
 
     /**
-     * Eliminación lógica
+     * BAJA LÓGICA.
      */
-    public function eliminar(string $uuid)
+    public function eliminar(string $numero)
     {
-        $empleado = Empleado::where('uuid', $uuid)->first();
+        $empleado = Empleado::where('numero_empleado', $numero)->first();
 
         if (!$empleado) {
-            return ApiResponse::error('Empleado no encontrado', 404);
+            return ApiResponse::error("El empleado con número {$numero} no existe.", 404);
+        }
+
+        // Si ya está inactivo, mandamos 422 para que el frontend lo pinte de rojo
+        if (!$empleado->activo) {
+            return ApiResponse::error("El empleado ya se encuentra dado de baja.", 422);
         }
 
         $empleado->update(['activo' => false]);
 
-        return ApiResponse::exito(null, 'Empleado desactivado');
+        // Retornamos el nombre para que el Toast sea más descriptivo
+        return ApiResponse::exito(null, "Empleado {$empleado->nombre} desactivado correctamente.");
     }
 }

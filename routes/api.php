@@ -8,15 +8,18 @@ use App\Http\Controllers\EmpleadoController;
  */
 Route::prefix('empleados')->group(function () {
 
-    // Buscar por número de empleado
+
+    Route::get('/', [EmpleadoController::class, 'index']);
+
+    // BÚSQUEDA POR NÚMERO DE EMPLEADO -> /api/empleados/numero/{numero}
     Route::get('/numero/{numero}', [EmpleadoController::class, 'buscarPorNumero']);
 
-    // Crear
+    // CREAR -> /api/empleados
     Route::post('/', [EmpleadoController::class, 'crear']);
 
-    // Actualizar
+    // ACTUALIZAR -> /api/empleados/{uuid}
     Route::put('/{uuid}', [EmpleadoController::class, 'actualizar']);
 
-    // Eliminación
-    Route::delete('/{uuid}', [EmpleadoController::class, 'eliminar']);
+    // ELIMINAR (Baja Lógica) -> /api/empleados/{numero}
+    Route::delete('/{numero}', [EmpleadoController::class, 'eliminar']);
 });

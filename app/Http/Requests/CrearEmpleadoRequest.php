@@ -4,9 +4,6 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-/**
- * Validación para crear empleados.
- */
 class CrearEmpleadoRequest extends FormRequest
 {
     public function authorize(): bool
@@ -22,6 +19,16 @@ class CrearEmpleadoRequest extends FormRequest
             'es_interno' => 'required|boolean',
             'rol_id' => 'required|exists:roles,id',
             'fecha_ingreso' => 'required|date',
+        ];
+    }
+
+
+    public function messages(): array
+    {
+        return [
+            'numero_empleado.unique' => 'El número de empleado ya existe.',
+            'rol_id.exists' => 'El rol seleccionado no es válido.',
+            'fecha_ingreso.date' => 'El formato de fecha es incorrecto.',
         ];
     }
 }
