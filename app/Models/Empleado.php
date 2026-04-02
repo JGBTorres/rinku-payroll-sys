@@ -31,11 +31,11 @@ class Empleado extends Model
     ];
 
     protected $hidden = [
-       'id',
-       'rol_id',
-       'created_at',
-       'updated_at'
- ];
+        'id',
+        'rol_id',
+        'created_at',
+        'updated_at'
+    ];
 
     protected static function boot()
     {
@@ -47,9 +47,29 @@ class Empleado extends Model
             }
         });
     }
+    /**
+     * Usa el UUID para las búsquedas en rutas en lugar del ID.
+     */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
+
 
     public function rol()
     {
         return $this->belongsTo(Role::class, 'rol_id');
+    }
+
+    //Relación con sus registros de horas y entregas
+    public function movimientos()
+    {
+        return $this->hasMany(Movimiento::class, 'empleado_id');
+    }
+
+    //Relación con sus recibos de nómina terminados
+    public function nominas()
+    {
+        return $this->hasMany(NominaMensual::class, 'empleado_id');
     }
 }

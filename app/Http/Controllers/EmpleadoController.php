@@ -14,7 +14,7 @@ class EmpleadoController extends Controller
     /**
      * Listar todos los empleados (Para la tabla).
      */
-    public function index()
+    public function listar()
     {
         try {
             // Traemos todos con su relación de rol para mostrar el nombre del puesto
@@ -33,12 +33,12 @@ class EmpleadoController extends Controller
         // Usamos first() para obtener la instancia o null
         $empleado = Empleado::with('rol')->where('numero_empleado', $numero)->first();
 
-        //Si NO existe (Error 404)
+        //Si NO existe
         if (!$empleado) {
             return ApiResponse::error('El número de empleado no existe.', 404);
         }
 
-        //Si estamos en la pestaña "NUEVO" (check_only) y YA existe
+        //Si existe pero el query param check_only está presente, es decir, solo queremos verificar disponibilidad (Error 409 - Conflicto)
         if ($request->query('check_only')) {
             return ApiResponse::error('Este número ya está registrado.', 409);
         }
@@ -48,7 +48,7 @@ class EmpleadoController extends Controller
             return ApiResponse::error('Este empleado se encuentra inactivo.', 422);
         }
 
-        // 4. ÉXITO: Búsqueda completa
+        //Búsqueda completa
         return ApiResponse::exito($empleado, 'Empleado encontrado.');
     }
 
@@ -102,7 +102,7 @@ class EmpleadoController extends Controller
 
         $empleado->update(['activo' => false]);
 
-        // Retornamos el nombre para que el Toast sea más descriptivo
+        // Retornamos el nombre del empleado para mostrarlo en el mensaje de éxito
         return ApiResponse::exito(null, "Empleado {$empleado->nombre} desactivado correctamente.");
     }
 }
