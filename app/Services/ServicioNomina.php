@@ -55,7 +55,7 @@ class ServicioNomina
             'vales_despensa'      => $vales,
             'isr_retencion'       => $isr,
             'sueldo_neto'         => $sueldoNeto,
-            'fecha_calculo'       => now(),
+            'fecha_calculo' => now()->format('Y-m-d H:i:s'),
         ];
     }
 }

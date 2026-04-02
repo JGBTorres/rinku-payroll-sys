@@ -1,59 +1,76 @@
 import React from 'react';
+import { Empleado } from '../../Types';
 
 interface FilaEmpleadoProps {
-    empleado: any;
-    onEditar: (emp: any) => void;
-    onEliminar: (numero: string) => void;
+    empleado: Empleado;
+    onEditar: (empleado: Empleado) => void;
+    onEliminar: (uuid: string, numero: string) => void;
 }
 
 export const FilaEmpleado: React.FC<FilaEmpleadoProps> = ({ empleado, onEditar, onEliminar }) => {
-    const isInactivo = empleado.activo === 0 || empleado.activo === false;
+    const esInactivo = !empleado.activo;
 
     return (
-        <tr className={`transition-all group ${isInactivo ? 'bg-slate-50 opacity-60' : 'hover:bg-slate-50/80'}`}>
-            <td className="p-6">
-                <span className={`px-3 py-2 rounded-xl font-black text-xs ${isInactivo ? 'bg-slate-200 text-slate-400' : 'bg-slate-100 text-slate-600'}`}>
-                    #{empleado.numero_empleado}
+        <tr className={`group transition-all ${esInactivo ? 'bg-slate-50/40 opacity-75' : 'hover:bg-slate-50/50'}`}>
+            {/* ID Nómina */}
+            <td className="px-6 py-4 text-xs font-black text-slate-400 italic">
+                {empleado.numero_empleado}
+            </td>
+
+            {/* Nombre */}
+            <td className="px-6 py-4 text-sm font-bold text-slate-700">
+                {empleado.nombre}
+            </td>
+
+            {/* Cargo */}
+            <td className="px-6 py-4 text-center">
+                <span className={`inline-block px-3 py-1 text-[9px] font-black uppercase rounded-lg border ${empleado.rol?.nombre === 'CHOFER'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                        : 'bg-sky-50 text-sky-600 border-sky-100'
+                    }`}>
+                    {empleado.rol?.nombre || 'AUXILIAR'}
                 </span>
             </td>
-            <td className="p-6">
-                <div className={`font-bold ${isInactivo ? 'text-slate-400' : 'text-slate-800'}`}>{empleado.nombre}</div>
-                <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] font-bold uppercase text-slate-400">
-                        {empleado.es_interno ? 'Directo' : 'Externo'}
-                    </span>
-                    {isInactivo && (
-                        <span className="bg-red-100 text-red-600 text-[9px] px-2 py-0.5 rounded font-black uppercase">
-                            Inactivo
-                        </span>
-                    )}
-                </div>
-            </td>
-            <td className="p-6">
-                <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase ${isInactivo ? 'bg-slate-100 text-slate-300' : 'bg-blue-50 text-blue-600'}`}>
-                    {empleado.rol?.nombre || 'Sin Rol'}
+
+            {/* Fecha Ingreso */}
+            <td className="px-6 py-4 text-center">
+                <span className="text-[10px] font-black text-slate-500 bg-white border border-slate-100 px-2 py-1 rounded-md shadow-sm">
+                    {empleado.fecha_ingreso}
                 </span>
             </td>
-            <td className="p-6 text-center">
-                <div className="flex justify-center gap-2">
+
+            {/* Estado Activo/Inactivo */}
+            <td className="px-6 py-4 text-center">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase border ${empleado.activo
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                        : 'bg-rose-50 text-rose-600 border-rose-100'
+                    }`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${empleado.activo ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                    {empleado.activo ? 'Activo' : 'Inactivo'}
+                </span>
+            </td>
+
+            {/* Acciones con Bloqueo */}
+            <td className="px-6 py-4 text-right">
+                <div className="flex justify-end gap-2">
                     <button
-                        onClick={() => !isInactivo && onEditar(empleado)}
-                        disabled={isInactivo}
-                        className={`h-10 px-4 rounded-xl text-[10px] font-black uppercase transition-all shadow-sm ${isInactivo
-                                ? 'bg-transparent text-slate-300 border border-slate-100'
-                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white'
+                        onClick={() => !esInactivo && onEditar(empleado)}
+                        disabled={!!esInactivo}
+                        className={`p-2 rounded-xl transition-all ${esInactivo ? 'text-slate-200 cursor-not-allowed' : 'text-orange-500 hover:bg-orange-50'
                             }`}
+                        title={esInactivo ? "No se puede editar" : "Editar colaborador"}
                     >
-                        {isInactivo ? 'Bloqueado' : 'Editar'}
+                        <span className="text-lg">✏️</span>
                     </button>
-                    {!isInactivo && (
-                        <button
-                            onClick={() => onEliminar(empleado.numero_empleado)}
-                            className="h-10 w-10 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-xs shadow-sm"
-                        >
-                            ✕
-                        </button>
-                    )}
+                    <button
+                        onClick={() => !esInactivo && onEliminar(empleado.uuid!, empleado.numero_empleado)}
+                        disabled={!!esInactivo}
+                        className={`p-2 rounded-xl transition-all ${esInactivo ? 'text-slate-200 cursor-not-allowed' : 'text-slate-300 hover:text-red-500 hover:bg-red-50'
+                            }`}
+                        title={esInactivo ? "Ya está dado de baja" : "Dar de baja"}
+                    >
+                        <span className="text-lg">🗑️</span>
+                    </button>
                 </div>
             </td>
         </tr>

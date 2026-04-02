@@ -1,28 +1,21 @@
-import axios from 'axios';
-import { Empleado, ApiResponse } from '../Types';
 
-const api = axios.create({
-    baseURL: '/api',
-    headers: { 'Content-Type': 'application/json' }
-});
+import clienteAxios from '@/api/clientAxios';
+import { Empleado } from '../Types';
 
 export const empleadoService = {
-    // Nuevo método para traer a todos los empleados a la tabla
-    listar: () => {
-        return api.get<ApiResponse<Empleado[]>>('/empleados');
-    },
+    // Listar todos o buscar por número (?numero=123)
+    listar: (numero?: string) =>
+        clienteAxios.get(`/empleados${numero ? `?numero=${numero}` : ''}`),
 
-    buscar: (numero: string, checkOnly: boolean = false) => {
-        const url = `/empleados/numero/${numero}${checkOnly ? '?check_only=1' : ''}`;
-        return api.get<ApiResponse<Empleado>>(url);
-    },
-
+    // Crear nuevo registro
     crear: (datos: Empleado) =>
-        api.post<ApiResponse<Empleado>>('/empleados', datos),
+        clienteAxios.post('/empleados', datos),
 
+    // Actualizar usa el UUID en la URL
     actualizar: (uuid: string, datos: Partial<Empleado>) =>
-        api.put<ApiResponse<Empleado>>(`/empleados/${uuid}`, datos),
+        clienteAxios.put(`/empleados/${uuid}`, datos),
 
-    eliminar: (numero: string) =>
-        api.delete<ApiResponse<null>>(`/empleados/${numero}`),
+    // Eliminar (Baja lógica) usa el UUID
+    eliminar: (uuid: string) =>
+        clienteAxios.delete(`/empleados/${uuid}`),
 };

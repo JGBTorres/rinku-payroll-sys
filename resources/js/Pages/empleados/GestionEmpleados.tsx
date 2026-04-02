@@ -1,28 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 
-
 import { useEmpleado } from '../../Hooks/useEmpleado';
 import { empleadoService } from '../../Services/empleadoServicio';
 import { CardRinku } from '../../Components/UI/CardRinku';
 import { InputRinku } from '../../Components/UI/InputRinku';
-import { BotonRinku } from '@/Components/UI/ButtonRinku';
+import { BotonRinku } from '@/Components/UI/BotonRinku';
 import { TablaEmpleados } from '@/Components/Empleados/TablaEmpleados';
 import { FilaEmpleado } from '@/Components/Empleados/FilaEmpleado';
+import { Empleado } from '../../Types'; // Importamos el tipo
 
 const GestionEmpleados: React.FC = () => {
-
-    // Hook personalizado para manejar el formulario de empleado
     const {
-        form, handleChange, errors, ejecutarAccion, guardar,
+        form, handleChange, errors, guardar,
         setForm, initialForm, loading
     } = useEmpleado();
 
-    // Estado para almacenar la lista de empleados y el término de búsqueda
-    const [empleados, setEmpleados] = useState<any[]>([]);
+    const [empleados, setEmpleados] = useState<Empleado[]>([]);
     const [busqueda, setBusqueda] = useState('');
 
-    // Función para cargar empleados desde el backend
     const cargarEmpleados = async () => {
         try {
             const { data } = await empleadoService.listar();
@@ -32,42 +28,44 @@ const GestionEmpleados: React.FC = () => {
         }
     };
 
-    // Cargar empleados al montar el componente
     useEffect(() => { cargarEmpleados(); }, []);
 
+    // Manejador del guardado
     const handleGuardar = async () => {
-        await ejecutarAccion(guardar);
-        cargarEmpleados();
+        const exito = await guardar();
+        if (exito) {
+            cargarEmpleados();
+        }
     };
 
-    // Eliminar (baja lógica) de empleado
-    const handleEliminar = async (numero: string) => {
+    // Eliminar usa el UUID para coincidir con tu controlador
+    const handleEliminar = async (uuid: string, numero: string) => {
         if (!window.confirm(`¿Confirmas la baja del empleado #${numero}?`)) return;
         try {
-            const res = await empleadoService.eliminar(numero);
+            const res = await empleadoService.eliminar(uuid);
             toast.success(res.data.mensaje || "Empleado desactivado");
-            if (form.numero_empleado === numero) setForm(initialForm);
+            if (form.uuid === uuid) setForm(initialForm);
             cargarEmpleados();
         } catch (error: any) {
             toast.error(error.response?.data?.mensaje || "Error al eliminar");
         }
     };
 
-    // Cargar datos del empleado en el formulario para edición
-    const editar = (emp: any) => {
+    const editar = (emp: Empleado) => {
         setForm({
             ...emp,
             rol_id: emp.rol?.id || emp.rol_id,
-            es_interno: emp.es_interno ? 1 : 0
+            es_interno: emp.es_interno ? 1 : 0,
+            // Aseguramos que la fecha sea compatible con el input type="date"
+            fecha_ingreso: emp.fecha_ingreso || ''
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-    // Determinar si estamos en modo edición
+
     const isEditing = !!form.uuid;
 
     return (
         <div className="min-h-screen bg-[#f8fafc] p-4 md:p-10 space-y-10 antialiased font-sans">
-
             {/* 1. CABECERA */}
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -84,7 +82,7 @@ const GestionEmpleados: React.FC = () => {
                 </div>
             </div>
 
-            {/* 2. FORMULARIO DE REGISTRO / EDICIÓN */}
+            {/* 2. FORMULARIO */}
             <CardRinku
                 titulo="Gestión de Personal"
                 icono="👤"
@@ -105,8 +103,14 @@ const GestionEmpleados: React.FC = () => {
                         value={form.nombre} onChange={handleChange} error={errors.nombre}
                     />
 
+                    {/* NUEVO: Campo de Fecha de Ingreso */}
+                    <InputRinku
+                        label="Fecha de Ingreso" name="fecha_ingreso" type="date" colSpan="md:col-span-2"
+                        value={form.fecha_ingreso || ''} onChange={handleChange} error={errors.fecha_ingreso}
+                    />
+
                     {/* Selector de Puesto */}
-                    <div className="md:col-span-2 space-y-3">
+                    <div className="md:col-span-3 space-y-3">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest text-center block">Puesto</label>
                         <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
                             {['Chofer', 'Cargador', 'Auxiliar'].map((rol, i) => (
@@ -131,18 +135,20 @@ const GestionEmpleados: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="md:col-span-3 flex items-end">
-                        <BotonRinku
-                            onClick={handleGuardar}
-                            loading={loading}
-                            variant={isEditing ? 'blue' : 'emerald'}
-                            label={isEditing ? 'Actualizar Datos' : 'Registrar Empleado'}
-                        />
+                    <div className="md:col-span-6 flex justify-end">
+                        <div className="w-full md:w-1/3">
+                            <BotonRinku
+                                onClick={handleGuardar}
+                                loading={loading}
+                                variant={isEditing ? 'blue' : 'emerald'}
+                                label={isEditing ? 'Actualizar Datos' : 'Registrar Empleado'}
+                            />
+                        </div>
                     </div>
                 </div>
             </CardRinku>
 
-            {/* 3. LISTADO DINÁMICO */}
+            {/* 3. LISTADO */}
             <TablaEmpleados onBusqueda={setBusqueda}>
                 {empleados
                     .filter(e =>
@@ -151,10 +157,11 @@ const GestionEmpleados: React.FC = () => {
                     )
                     .map((emp) => (
                         <FilaEmpleado
-                            key={emp.id}
+                            key={emp.uuid} // Usar UUID como key es más seguro
                             empleado={emp}
                             onEditar={editar}
-                            onEliminar={handleEliminar}
+                            // Pasamos tanto el uuid como el numero para el mensaje y la API
+                            onEliminar={() => handleEliminar(emp.uuid!, emp.numero_empleado)}
                         />
                     ))
                 }

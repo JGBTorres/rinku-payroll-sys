@@ -20,13 +20,15 @@ export const TablaEmpleados: React.FC<TablaEmpleadosProps> = ({ children, onBusq
         </div>
 
         <div className="overflow-x-auto px-4 pb-4">
-            <table className="w-full text-left">
+            <table className="w-full text-left border-separate border-spacing-y-2">
                 <thead>
                     <tr className="text-[10px] uppercase font-black text-slate-400 tracking-widest">
-                        <th className="p-6">ID Nómina</th>
-                        <th className="p-6">Información Empleado</th>
-                        <th className="p-6">Cargo</th>
-                        <th className="p-6 text-center">Acciones</th>
+                        <th className="px-6 py-4">ID Nómina</th>
+                        <th className="px-6 py-4">Información Empleado</th>
+                        <th className="px-6 py-4 text-center">Cargo</th>
+                        <th className="px-6 py-4 text-center">Ingreso</th>
+                        <th className="px-6 py-4 text-center">Estado</th>
+                        <th className="px-6 py-4 text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
