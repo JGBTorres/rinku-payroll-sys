@@ -46,7 +46,7 @@ class NominaMensual extends Model
         'vales_despensa'      => 'decimal:2',
         'isr_retencion'       => 'decimal:2',
         'sueldo_neto'         => 'decimal:2',
-        'fecha_calculo'       => 'datetime',
+        'fecha_calculo' => 'date:Y-m-d'
     ];
 
     public function empleado()

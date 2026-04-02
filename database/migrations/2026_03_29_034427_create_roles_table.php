@@ -12,15 +12,15 @@ use Illuminate\Support\Facades\Schema;
  */
 return new class extends Migration
 {
-   public function up(): void
-{
-    Schema::create('roles', function (Blueprint $table) {
-    $table->id();// Identificador interno
-    $table->string('nombre')->unique();
-    $table->decimal('salario_base', 10, 2);// Salario base del rol
-    $table->decimal('bono_por_hora', 10, 2);// Bono adicional por hora trabajada
-});
-}
+    public function up(): void
+    {
+        Schema::create('roles', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre')->unique();
+            $table->decimal('salario_base', 10, 2);
+            $table->decimal('bono_por_hora', 10, 2);
+        });
+    }
 
     public function down(): void
     {

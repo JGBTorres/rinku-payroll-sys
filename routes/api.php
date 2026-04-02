@@ -6,50 +6,39 @@ use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\NominaController;
 
-/**
- * Rutas de empleados
- */
+
+
+/********** Rutas para gestión de empleados **********/
 Route::prefix('empleados')->group(function () {
 
-
+    // Listar todos
     Route::get('/', [EmpleadoController::class, 'listar']);
-
-    // Busqueda por número de empleado
-    Route::get('/numero/{numero}', [EmpleadoController::class, 'buscarPorNumero']);
-
-    // Creación de nuevo empleado
+    // Crear nuevo
     Route::post('/', [EmpleadoController::class, 'crear']);
-
-    // Actualización de empleado existente
+    // Actualizar
     Route::put('/{uuid}', [EmpleadoController::class, 'actualizar']);
-
-    // Eliminación de empleado (borrado lógico)
-    Route::delete('/{numero}', [EmpleadoController::class, 'eliminar']);
+    // Eliminar
+    Route::delete('/{uuid}', [EmpleadoController::class, 'eliminar']);
 });
-
 
 
 /**
  * Rutas de movimientos diarios
  */
-
-// Registro de movimientos diarios
 Route::prefix('movimientos')->group(function () {
 
-    // Listar movimientos (solo los que no están borrados)
+    //Listar movimientos (con filtros opcionales)
     Route::get('/', [MovimientoController::class, 'listar']);
 
-    // Registrar nuevo movimiento
-    Route::post('/registrar', [MovimientoController::class, 'guardar']);
+    //Crear movimiento
+    Route::post('/registrar', [MovimientoController::class, 'registrar']);
 
-    // Actualizar movimiento existente
+    //Actualizar movimiento
     Route::put('/{id}', [MovimientoController::class, 'actualizar']);
 
-    // Borrado lógico de movimiento
+    //Eliminar movimiento
     Route::delete('/{id}', [MovimientoController::class, 'eliminar']);
 });
-
-
 
 // Procesamiento de nómina mensual
 Route::post('/nominas/calcular', [NominaController::class, 'calcularMes']);

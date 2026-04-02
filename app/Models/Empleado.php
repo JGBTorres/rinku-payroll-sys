@@ -27,7 +27,7 @@ class Empleado extends Model
     protected $casts = [
         'es_interno' => 'boolean',
         'activo' => 'boolean',
-        'fecha_ingreso' => 'date',
+        'fecha_ingreso' => 'date:Y-m-d',
     ];
 
     protected $hidden = [
@@ -58,7 +58,7 @@ class Empleado extends Model
 
     public function rol()
     {
-        return $this->belongsTo(Role::class, 'rol_id');
+        return $this->belongsTo(Rol::class, 'rol_id');
     }
 
     //Relación con sus registros de horas y entregas

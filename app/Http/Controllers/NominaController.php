@@ -7,7 +7,11 @@ use App\Models\NominaMensual;
 use App\Services\ServicioNomina;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Responses\ApiResponse;
 
+/**
+ * Controlador para el cálculo de nómina mensual.
+ */
 class NominaController extends Controller
 {
     protected $servicio;
@@ -17,6 +21,10 @@ class NominaController extends Controller
         $this->servicio = $servicio;
     }
 
+    /**
+     * Calcular nómina de un mes específico.
+     * Se puede calcular para todos los empleados o uno en particular.
+     */
     public function calcularMes(Request $request)
     {
         $request->validate([
@@ -25,35 +33,64 @@ class NominaController extends Controller
             'uuid' => 'nullable|exists:empleados,uuid',
         ]);
 
+        // --- VALIDACIÓN DE DUPLICADOS ---
+        // Verificamos si ya existe nómina generada en la tabla de resultados
+        $existeQuery = NominaMensual::where('mes', $request->mes)
+            ->where('anio', $request->anio);
+
+        // Si se pide un empleado específico, validamos solo a ese
+        if ($request->filled('uuid')) {
+            $existeQuery->whereHas('empleado', function ($q) use ($request) {
+                $q->where('uuid', $request->uuid);
+            });
+        }
+
+        if ($existeQuery->exists()) {
+            $mensaje = $request->filled('uuid')
+                ? "La nómina de este empleado para {$request->mes}/{$request->anio} ya fue generada."
+                : "La nómina general para el periodo {$request->mes}/{$request->anio} ya existe.";
+
+            return ApiResponse::error($mensaje, 422);
+        }
+        // --- FIN VALIDACIÓN ---
+
         $consulta = Empleado::where('activo', true);
 
-        // Si mandas el uuid, filtramos por él
-        if ($request->has('uuid')) {
+        if ($request->filled('uuid')) {
             $consulta->where('uuid', $request->uuid);
         }
 
         $empleados = $consulta->get();
+
+        if ($empleados->isEmpty()) {
+            return ApiResponse::error('No se encontraron empleados para procesar.', 404);
+        }
+
         $resultados = [];
 
         DB::beginTransaction();
         try {
             foreach ($empleados as $empleado) {
-                $datos = $this->servicio->calcular($empleado, $request->mes, $request->anio);
-
-                $resultados[] = NominaMensual::updateOrCreate(
-                    [
-                        'empleado_id' => $empleado->id,
-                        'mes'         => $request->mes,
-                        'anio'        => $request->anio
-                    ],
-                    $datos
+                $datos = $this->servicio->calcular(
+                    $empleado,
+                    $request->mes,
+                    $request->anio
                 );
+
+                // Al validar arriba, ya no hay riesgo de duplicados accidentales
+                $resultados[] = NominaMensual::create(array_merge([
+                    'empleado_id' => $empleado->id,
+                    'mes'         => $request->mes,
+                    'anio'        => $request->anio
+                ], $datos));
             }
+
             DB::commit();
-            return response()->json(['mensaje' => 'Cálculo terminado', 'datos' => $resultados]);
+
+            return ApiResponse::exito($resultados, 'Cálculo terminado correctamente');
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return ApiResponse::error("Error en el proceso: " . $e->getMessage(), 500);
         }
     }
 }

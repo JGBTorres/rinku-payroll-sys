@@ -40,8 +40,6 @@ return new class extends Migration
             // Fecha en la que el empleado ingresó a la empresa
 
             $table->boolean('activo')->default(true);
-            // Indica si el empleado sigue activo
-            $table->timestamps();
         });
     }
 

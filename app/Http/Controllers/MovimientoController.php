@@ -4,57 +4,120 @@ namespace App\Http\Controllers;
 
 use App\Models\Empleado;
 use App\Models\Movimiento;
+use App\Http\Responses\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
+/**
+ * Controlador para la gestión de movimientos (horas y entregas).
+ */
 class MovimientoController extends Controller
 {
-    //Registrar un nuevo movimiento
-    public function guardar(Request $request)
+    /**
+     * Listar historial de movimientos.
+     * Permite filtrar por UUID de empleado y periodo.
+     */
+    public function listar(Request $request): JsonResponse
+    {
+        $query = Movimiento::with('empleado:id,nombre,uuid');
+
+        if ($request->filled('uuid')) {
+            $query->whereHas('empleado', function ($q) use ($request) {
+                $q->where('uuid', $request->uuid);
+            });
+        }
+
+        if ($request->filled('mes')) {
+            $query->whereMonth('fecha', $request->mes);
+        }
+
+        if ($request->filled('anio')) {
+            $query->whereYear('fecha', $request->anio);
+        }
+
+        $movimientos = $query
+            ->orderBy('fecha', 'desc')
+            ->get();
+
+        return ApiResponse::exito($movimientos, 'Historial obtenido correctamente');
+    }
+
+    /**
+     * Registrar un nuevo movimiento.
+     */
+    public function registrar(Request $request): JsonResponse
     {
         $request->validate([
             'uuid'             => 'required|exists:empleados,uuid',
             'fecha'            => 'required|date',
-            'horas_trabajadas' => 'required|numeric|min:1|max:24',
+            'horas_trabajadas' => 'required|integer|min:1|max:24',
             'entregas'         => 'required|integer|min:0',
+            'rol_aplicado_id'  => 'nullable|exists:roles,id'
         ]);
 
-        $empleado = Empleado::where('uuid', $request->uuid)->firstOrFail();
+        try {
+            $empleado = Empleado::where('uuid', $request->uuid)->firstOrFail();
 
-        $movimiento = Movimiento::create([
-            'empleado_id'      => $empleado->id,
-            'fecha'            => $request->fecha,
-            'horas_trabajadas' => $request->horas_trabajadas,
-            'entregas'         => $request->entregas,
-            'rol_aplicado_id'  => $empleado->rol_id,
+            $movimiento = Movimiento::create([
+                'empleado_id'      => $empleado->id,
+                'fecha'            => $request->fecha,
+                'horas_trabajadas' => $request->horas_trabajadas,
+                'entregas'         => $request->entregas,
+                'rol_aplicado_id'  => $request->rol_aplicado_id ?? $empleado->rol_id,
+            ]);
+
+            return ApiResponse::exito(
+                $movimiento->load('empleado:id,nombre,uuid'),
+                'Registro exitoso',
+                201
+            );
+        } catch (\Exception $e) {
+            return ApiResponse::error('Error al guardar el movimiento', 500);
+        }
+    }
+
+    /**
+     * Actualizar un movimiento existente.
+     */
+    public function actualizar(Request $request, $id): JsonResponse
+    {
+        $request->validate([
+            'fecha' => 'sometimes|date',
+            'horas_trabajadas' => 'sometimes|integer|min:1|max:24',
+            'entregas' => 'sometimes|integer|min:0',
+            'rol_aplicado_id' => 'nullable|exists:roles,id'
         ]);
 
-        return response()->json(['mensaje' => 'Movimiento registrado', 'datos' => $movimiento], 201);
+        try {
+            $movimiento = Movimiento::findOrFail($id);
+
+            $movimiento->update($request->only([
+                'fecha',
+                'horas_trabajadas',
+                'entregas',
+                'rol_aplicado_id'
+            ]));
+
+            return ApiResponse::exito(
+                $movimiento->load('empleado:id,nombre,uuid'),
+                'Actualizado correctamente'
+            );
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse::error('No se encontró el registro', 404);
+        }
     }
 
-    //Listar movimientos para ver su historial
-    public function listar()
+    /**
+     * Eliminar un movimiento.
+     */
+    public function eliminar($id): JsonResponse
     {
-
-        return response()->json(Movimiento::with('empleado:id,nombre,uuid')->get());
-    }
-
-    //Actualizar un movimiento existente (por ejemplo, si el empleado se equivocó al registrar sus horas o entregas)
-    public function actualizar(Request $request, $id)
-    {
-        $movimiento = Movimiento::findOrFail($id);
-        $movimiento->update($request->only(['fecha', 'horas_trabajadas', 'entregas']));
-
-        return response()->json(['mensaje' => 'Movimiento actualizado', 'datos' => $movimiento]);
-    }
-
-    //Borrar un movimiento solo de forma lógica, para mantener el historial intacto
-    public function eliminar($id)
-    {
-        $movimiento = Movimiento::findOrFail($id);
-
-        //Solo llena la columna 'deleted_at' sin eliminar el registro físicamente
-        $movimiento->delete();
-
-        return response()->json(['mensaje' => 'Movimiento enviado eliminado']);
+        try {
+            Movimiento::findOrFail($id)->delete();
+            return ApiResponse::exito(null, 'Eliminado correctamente');
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse::error('No se encontró el registro', 404);
+        }
     }
 }

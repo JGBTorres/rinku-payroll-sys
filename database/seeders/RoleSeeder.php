@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Role;
+use App\Models\Rol;
 
 class RoleSeeder extends Seeder
 {
@@ -30,7 +30,7 @@ class RoleSeeder extends Seeder
             ]
         ];
         foreach ($roles as $rol) {
-            Role::updateOrCreate(
+            Rol::updateOrCreate(
                 ['nombre' => $rol['nombre']],
                 $rol
             );

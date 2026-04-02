@@ -5,43 +5,44 @@ namespace App\Services;
 use App\Models\Empleado;
 use App\Models\Movimiento;
 
+/**
+ * Servicio encargado del cálculo de nómina mensual.
+ */
 class ServicioNomina
 {
+    /**
+     * Calcula la nómina de un empleado en un mes específico.
+     */
     public function calcular(Empleado $empleado, int $mes, int $anio)
     {
-        // Buscamos movimientos usando el ID interno
-        $movimientos = Movimiento::where('empleado_id', $empleado->id)
+        $movimientos = Movimiento::with('rolAplicado')
+            ->where('empleado_id', $empleado->id)
             ->whereMonth('fecha', $mes)
             ->whereYear('fecha', $anio)
             ->get();
 
-        // Si no hay movimientos, el sueldo neto es 0 pero igual calculamos para mostrar detalles
         $totalHoras = $movimientos->sum('horas_trabajadas');
-
-        // Para entregas, sumamos la cantidad total (no importa si es interna o externa, el pago es el mismo)
         $totalEntregas = $movimientos->sum('entregas');
 
-        // Obtenemos el rol para acceder a salario_base y bono_por_hora
-        $rol = $empleado->rol;
+        $pagoBase = $totalHoras * 30.00;
 
-        // Cálculos
-        $pagoBase = $totalHoras * $rol->salario_base;
-        $bonoRol = $totalHoras * $rol->bono_por_hora;
+        $bonoRol = 0;
+        foreach ($movimientos as $mov) {
+            $bono = optional($mov->rolAplicado)->bono_por_hora ?? 0;
+            $bonoRol += ($mov->horas_trabajadas * $bono);
+        }
+
         $pagoEntregas = $totalEntregas * 5.00;
 
-        // Sueldo Bruto antes de deducciones
         $sueldoBruto = $pagoBase + $bonoRol + $pagoEntregas;
 
-        // Deducciones
         $vales = $empleado->es_interno ? ($sueldoBruto * 0.04) : 0;
-        $tasaISR = ($sueldoBruto > 10000) ? 0.12 : 0.09;
+
+        $tasaISR = ($sueldoBruto > 16000) ? 0.12 : 0.09;
         $isr = $sueldoBruto * $tasaISR;
 
-
-        // Sueldo Neto después de deducciones
         $sueldoNeto = ($sueldoBruto - $isr) + $vales;
 
-        // Retornamos un array con todos los detalles del cálculo para mostrar en el resumen
         return [
             'empleado_id'         => $empleado->id,
             'mes'                 => $mes,

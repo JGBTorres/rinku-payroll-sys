@@ -20,6 +20,11 @@ Route::get('/empleados', function () {
 })->name('empleados.index');
 
 
+// NUEVA: Ruta para movimientos
+Route::get('/movimientos', function () {
+    return Inertia::render('movimientos/GestionMovimientos');
+})->name('movimientos.index');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

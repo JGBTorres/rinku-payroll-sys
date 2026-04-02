@@ -8,6 +8,7 @@ class Movimiento extends Model
 {
     protected $table = 'movimientos';
 
+    //Campos que se pueden asignar masivamente
     protected $fillable = [
         'empleado_id',
         'fecha',
@@ -16,36 +17,22 @@ class Movimiento extends Model
         'rol_aplicado_id'
     ];
 
-    /**
-     *No exponer campos sensibles o innecesarios en las respuestas JSON.
-     */
-    protected $hidden = [
-        // 'id',
-        'empleado_id',
-        'rol_aplicado_id',
-        'created_at',
-        'updated_at'
-    ];
-
+    //Convertir tipos de datos
     protected $casts = [
-        'fecha'            => 'date',
-        'horas_trabajadas' => 'integer',
+        'fecha'            => 'date:Y-m-d',
+        'horas_trabajadas' => 'decimal:2',
         'entregas'         => 'integer',
+        'rol_aplicado_id'  => 'integer',
     ];
-
-    /**
-     * Relación: Un movimiento pertenece a un empleado.
-     */
+    //Relacion de un movimiento con un empleado
     public function empleado()
     {
         return $this->belongsTo(Empleado::class, 'empleado_id');
     }
 
-    /**
-     * Relación: El rol que se usó para calcular este movimiento.
-     */
-    public function rol()
+    //Relacion de un movimiento con un rol aplicado
+    public function rolAplicado()
     {
-        return $this->belongsTo(Role::class, 'rol_aplicado_id');
+        return $this->belongsTo(Rol::class, 'rol_aplicado_id');
     }
 }

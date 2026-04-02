@@ -1,24 +1,27 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+namespace App\Models;
 
-return new class extends Migration
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Movimiento extends Model
 {
-    public function up()
-    {
-        Schema::table('movimientos', function (Blueprint $table) {
-            // Esta línea crea la columna 'deleted_at'
-            $table->softDeletes();
-        });
-    }
+    use  SoftDeletes;
 
-    public function down()
+    protected $table = 'movimientos';
+
+    protected $fillable = [
+        'empleado_id',
+        'fecha',
+        'horas_trabajadas',
+        'entregas',
+        'rol_aplicado_id'
+    ];
+
+    // Relación con el empleado
+    public function empleado()
     {
-        Schema::table('movimientos', function (Blueprint $table) {
-            // Esta línea la elimina si decidimos echar atrás el cambio
-            $table->dropSoftDeletes();
-        });
+        return $this->belongsTo(Empleado::class, 'empleado_id');
     }
-};
+}
