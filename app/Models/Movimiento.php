@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Empleado;
+use App\Models\Rol;
 
 class Movimiento extends Model
 {
@@ -16,11 +19,15 @@ class Movimiento extends Model
         'entregas',
         'rol_aplicado_id'
     ];
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 
     //Convertir tipos de datos
     protected $casts = [
         'fecha'            => 'date:Y-m-d',
-        'horas_trabajadas' => 'decimal:2',
+        'horas_trabajadas' => 'float',
         'entregas'         => 'integer',
         'rol_aplicado_id'  => 'integer',
     ];

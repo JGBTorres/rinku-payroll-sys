@@ -9,19 +9,16 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-/**
- * Controlador para la gestión de movimientos (horas y entregas).
- */
 class MovimientoController extends Controller
 {
     /**
-     * Listar historial de movimientos.
-     * Permite filtrar por UUID de empleado y periodo.
+     * Listar historial de movimientos con relaciones completas.
      */
     public function listar(Request $request): JsonResponse
     {
-        $$query = Movimiento::with([
-            'empleado:id,nombre,uuid',
+        $query = Movimiento::with([
+            'empleado:id,uuid,nombre,rol_id',
+            'empleado.rol:id,nombre,salario_base,bono_por_hora',
             'rolAplicado:id,nombre,salario_base,bono_por_hora'
         ]);
 
@@ -39,9 +36,7 @@ class MovimientoController extends Controller
             $query->whereYear('fecha', $request->anio);
         }
 
-        $movimientos = $query
-            ->orderBy('fecha', 'desc')
-            ->get();
+        $movimientos = $query->orderBy('fecha', 'desc')->get();
 
         return ApiResponse::exito($movimientos, 'Historial obtenido correctamente');
     }
@@ -56,39 +51,33 @@ class MovimientoController extends Controller
             'fecha'            => 'required|date',
             'horas_trabajadas' => 'required|numeric|min:0.5|max:24',
             'entregas'         => 'required|integer|min:0',
-            'rol_aplicado_id'  => 'sometimes|exists:roles,id',
+            'rol_aplicado_id'  => 'sometimes|nullable|exists:roles,id',
         ]);
 
         try {
-            // Buscar empleado por UUID
             $empleado = Empleado::where('uuid', $request->uuid)->firstOrFail();
 
-            //Evitar duplicar movimientos en la misma fecha
             $existe = Movimiento::where('empleado_id', $empleado->id)
                 ->whereDate('fecha', $request->fecha)
                 ->exists();
 
             if ($existe) {
-                return ApiResponse::error(
-                    'Ya existe un movimiento para este empleado en esa fecha',
-                    422
-                );
+                return ApiResponse::error('Ya existe un movimiento para este empleado en esa fecha', 422);
             }
 
-            // Crear movimiento
             $movimiento = Movimiento::create([
                 'empleado_id'      => $empleado->id,
                 'fecha'            => $request->fecha,
                 'horas_trabajadas' => $request->horas_trabajadas,
                 'entregas'         => $request->entregas,
-                //Usa rol aplicado o el rol base del empleado
                 'rol_aplicado_id'  => $request->rol_aplicado_id ?? $empleado->rol_id,
             ]);
 
+            // Se cargan las relaciones completas para la respuesta
             return ApiResponse::exito(
                 $movimiento->load([
-                    'empleado:id,nombre,uuid',
-                    'rolAplicado:id,nombre,salario_base,bono_por_hora'
+                    'empleado.rol',
+                    'rolAplicado'
                 ]),
                 'Registro exitoso',
                 201
@@ -120,8 +109,12 @@ class MovimientoController extends Controller
                 'rol_aplicado_id'
             ]));
 
+            //Se cargan las relaciones completas
             return ApiResponse::exito(
-                $movimiento->load('empleado:id,nombre,uuid'),
+                $movimiento->load([
+                    'empleado.rol',
+                    'rolAplicado'
+                ]),
                 'Actualizado correctamente'
             );
         } catch (ModelNotFoundException $e) {
@@ -129,9 +122,6 @@ class MovimientoController extends Controller
         }
     }
 
-    /**
-     * Eliminar un movimiento.
-     */
     public function eliminar($id): JsonResponse
     {
         try {

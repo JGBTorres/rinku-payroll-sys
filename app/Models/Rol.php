@@ -23,7 +23,11 @@ class Rol extends Model
         'salario_base',
         'bono_por_hora'
     ];
-
+    //
+    protected $casts = [
+        'salario_base' => 'float',
+        'bono_por_hora' => 'float',
+    ];
     // Desactivar timestamps
     public $timestamps = false;
 

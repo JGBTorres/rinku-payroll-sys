@@ -38,17 +38,16 @@ class NominaMensual extends Model
     protected $casts = [
         'mes'                 => 'integer',
         'anio'                => 'integer',
-        'horas_total'         => 'decimal:2',
-        'sueldo_base_total'   => 'decimal:2',
-        'bonos_total'         => 'decimal:2',
-        'pago_entregas_total' => 'decimal:2',
-        'sueldo_bruto'        => 'decimal:2',
-        'vales_despensa'      => 'decimal:2',
-        'isr_retencion'       => 'decimal:2',
-        'sueldo_neto'         => 'decimal:2',
-        'fecha_calculo' => 'string',
+        'horas_total'         => 'float',
+        'sueldo_base_total'   => 'float',
+        'bonos_total'         => 'float',
+        'pago_entregas_total' => 'float',
+        'sueldo_bruto'        => 'float',
+        'vales_despensa'      => 'float',
+        'isr_retencion'       => 'float',
+        'sueldo_neto'         => 'float',
+        'fecha_calculo'       => 'datetime',
     ];
-
     public function empleado()
     {
         return $this->belongsTo(Empleado::class, 'empleado_id');
