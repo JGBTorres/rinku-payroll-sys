@@ -20,7 +20,10 @@ class MovimientoController extends Controller
      */
     public function listar(Request $request): JsonResponse
     {
-        $query = Movimiento::with('empleado:id,nombre,uuid');
+        $$query = Movimiento::with([
+            'empleado:id,nombre,uuid',
+            'rolAplicado:id,nombre,salario_base,bono_por_hora'
+        ]);
 
         if ($request->filled('uuid')) {
             $query->whereHas('empleado', function ($q) use ($request) {
@@ -51,24 +54,42 @@ class MovimientoController extends Controller
         $request->validate([
             'uuid'             => 'required|exists:empleados,uuid',
             'fecha'            => 'required|date',
-            'horas_trabajadas' => 'required|integer|min:1|max:24',
+            'horas_trabajadas' => 'required|numeric|min:0.5|max:24',
             'entregas'         => 'required|integer|min:0',
-            'rol_aplicado_id'  => 'nullable|exists:roles,id'
+            'rol_aplicado_id'  => 'sometimes|exists:roles,id',
         ]);
 
         try {
+            // Buscar empleado por UUID
             $empleado = Empleado::where('uuid', $request->uuid)->firstOrFail();
 
+            //Evitar duplicar movimientos en la misma fecha
+            $existe = Movimiento::where('empleado_id', $empleado->id)
+                ->whereDate('fecha', $request->fecha)
+                ->exists();
+
+            if ($existe) {
+                return ApiResponse::error(
+                    'Ya existe un movimiento para este empleado en esa fecha',
+                    422
+                );
+            }
+
+            // Crear movimiento
             $movimiento = Movimiento::create([
                 'empleado_id'      => $empleado->id,
                 'fecha'            => $request->fecha,
                 'horas_trabajadas' => $request->horas_trabajadas,
                 'entregas'         => $request->entregas,
+                //Usa rol aplicado o el rol base del empleado
                 'rol_aplicado_id'  => $request->rol_aplicado_id ?? $empleado->rol_id,
             ]);
 
             return ApiResponse::exito(
-                $movimiento->load('empleado:id,nombre,uuid'),
+                $movimiento->load([
+                    'empleado:id,nombre,uuid',
+                    'rolAplicado:id,nombre,salario_base,bono_por_hora'
+                ]),
                 'Registro exitoso',
                 201
             );
@@ -84,7 +105,7 @@ class MovimientoController extends Controller
     {
         $request->validate([
             'fecha' => 'sometimes|date',
-            'horas_trabajadas' => 'sometimes|integer|min:1|max:24',
+            'horas_trabajadas' => 'sometimes|numeric|min:1|max:24',
             'entregas' => 'sometimes|integer|min:0',
             'rol_aplicado_id' => 'nullable|exists:roles,id'
         ]);

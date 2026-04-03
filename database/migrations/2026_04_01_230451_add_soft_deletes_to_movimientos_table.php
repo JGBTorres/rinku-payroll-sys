@@ -9,6 +9,7 @@ class Movimiento extends Model
 {
     use  SoftDeletes;
 
+
     protected $table = 'movimientos';
 
     protected $fillable = [

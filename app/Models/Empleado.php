@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
+use App\Models\Rol;
+use App\Models\Movimiento;
+use App\Models\NominaMensual;
+
 /**
  * Modelo Empleado.
  */
@@ -32,7 +36,6 @@ class Empleado extends Model
 
     protected $hidden = [
         'id',
-        'rol_id',
         'created_at',
         'updated_at'
     ];

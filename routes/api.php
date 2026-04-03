@@ -1,44 +1,56 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\NominaController;
+use App\Http\Controllers\RolController;
 
+/*
+|--------------------------------------------------------------------------
+| Empleados
+|--------------------------------------------------------------------------
+*/
 
-
-/********** Rutas para gestión de empleados **********/
 Route::prefix('empleados')->group(function () {
-
-    // Listar todos
     Route::get('/', [EmpleadoController::class, 'listar']);
-    // Crear nuevo
     Route::post('/', [EmpleadoController::class, 'crear']);
-    // Actualizar
     Route::put('/{uuid}', [EmpleadoController::class, 'actualizar']);
-    // Eliminar
     Route::delete('/{uuid}', [EmpleadoController::class, 'eliminar']);
 });
 
+/*
+|--------------------------------------------------------------------------
+| Roles
+|--------------------------------------------------------------------------
+*/
+Route::get('/roles', [RolController::class, 'index']);
 
-/**
- * Rutas de movimientos diarios
- */
+/*
+|--------------------------------------------------------------------------
+| Movimientos diarios
+|--------------------------------------------------------------------------
+*/
 Route::prefix('movimientos')->group(function () {
 
-    //Listar movimientos (con filtros opcionales)
+    // Listar movimientos (filtros: uuid, mes, anio)
     Route::get('/', [MovimientoController::class, 'listar']);
 
-    //Crear movimiento
-    Route::post('/registrar', [MovimientoController::class, 'registrar']);
+    // ✅ Crear movimiento (ANTES: /registrar)
+    Route::post('/', [MovimientoController::class, 'registrar']);
 
-    //Actualizar movimiento
+    // Actualizar movimiento
     Route::put('/{id}', [MovimientoController::class, 'actualizar']);
 
-    //Eliminar movimiento
+    // Eliminar movimiento (soft delete)
     Route::delete('/{id}', [MovimientoController::class, 'eliminar']);
 });
 
-// Procesamiento de nómina mensual
-Route::post('/nominas/calcular', [NominaController::class, 'calcularMes']);
+/*
+|--------------------------------------------------------------------------
+| Nómina mensual
+|--------------------------------------------------------------------------
+*/
+Route::prefix('nominas')->group(function () {
+    Route::post('/calcular', [NominaController::class, 'calcularMes']);
+});

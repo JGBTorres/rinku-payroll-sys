@@ -25,6 +25,8 @@ return new class extends Migration
             $table->foreignId('rol_aplicado_id')->constrained('roles')->restrictOnDelete();
 
             $table->index(['empleado_id', 'fecha']);
+            $table->softDeletes();
+            $table->timestamps();
         });
     }
 
