@@ -36,7 +36,7 @@ Route::prefix('movimientos')->group(function () {
     // Listar movimientos (filtros: uuid, mes, anio)
     Route::get('/', [MovimientoController::class, 'listar']);
 
-    // ✅ Crear movimiento (ANTES: /registrar)
+    // Crear movimiento (ANTES: /registrar)
     Route::post('/', [MovimientoController::class, 'registrar']);
 
     // Actualizar movimiento
